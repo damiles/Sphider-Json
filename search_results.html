@@ -1,0 +1,120 @@
+<?php 
+extract($search_results);
+if ($search_results['did_you_mean']){?>
+"did_you_mean":[
+{
+	"name": "<?php print $search_results['did_you_mean']; ?>",
+	"link": "<?php print 'search.php?query='.quote_replace(addmarks($search_results['did_you_mean'])).'&search=1'?>"
+}],
+<?php  
+}
+if ($search_results['ignore_words']){?>
+	<?php while ($thisword=each($ignore_words)) {
+		$ignored .= " ".$thisword[1];
+	}		
+	$msg = str_replace ('%ignored_words', $ignored, $sph_messages["ignoredWords"]); 
+	?>
+"common_report":"<?php echo $msg; ?>",
+<?php  
+}
+if ($search_results['total_results']==0){?>
+		<?php 
+		$msg = str_replace ('"%query"', "<b>".$ent_query."</b>", $sph_messages["noMatch"]);
+		?>
+"result_report":"<?php echo $msg;?>",
+<?php
+}
+if ($total_results != 0 && $from <= $to){?>
+	<?php  
+	$result = $sph_messages['Results'];
+	$result = str_replace ('%from', $from, $result);
+	$result = str_replace ('%to', $to, $result);
+	$result = str_replace ('%all', $total_results, $result);
+	$matchword = $sph_messages["matches"];
+	if ($total_results== 1) {
+		$matchword= $sph_messages["match"];
+	} else {
+		$matchword= $sph_messages["matches"];
+	}
+
+	$result = str_replace ('%matchword', $matchword, $result);	 
+	$result = str_replace ('%secs', $time, $result);
+	?>
+"result_report":"<?php echo $result;?>",
+<?php  }?>
+"results":[
+<?php if (isset($qry_results)) {
+?>
+	<?php foreach ($qry_results as $_key => $_row){
+		$last_domain = $domain_name;
+		extract($_row);
+		if ($show_query_scores == 0) {
+			$weight = '';
+		} else {
+			$weight = "[$weight%]"; 
+		}
+		?>
+{
+<?php  if($domain_name==$last_domain && $merge_site_results == 1 && $domain == "") {?>
+	"idented":"true",
+	"identedLink":"<?php print 'search.php?query='.quote_replace(addmarks($query)).'&search=1&results='.$results_per_page.'&domain='.$domain_name?>",
+	"identedLinkTitle":"<?php print $domain_name?>",
+<?php }else{?>
+	"idented":"false",
+<?php }?>
+	"num":"<?php print $num?>",
+	"weight":"<?php print $weight?>",
+	"link":"<?php print $url?>",
+	"title":"<?php print ($title?$title:$sph_messages['Untitled'])?>",
+<?php
+			$description=str_replace("\n", "", $fulltxt);
+			$description=str_replace("\r", "", $description);
+			$description=str_replace('"', '&quot;', $description);
+			?>
+	"description":"<?php print $description?>",
+	"link2":"<?php print $url2?>",
+	"size":"<?php print $page_size?>"
+},
+<?php  }?>
+{
+	"num":"-1"
+}
+<?php } ?>
+],
+<?php if (isset($other_pages)) {
+	if ($adv==1) {
+		$adv_qry = "&adv=1";
+	}
+	if ($type != "") {
+		$type_qry = "&type=$type";
+	}
+?>
+"other_pages":[
+	<?php if ($start >1){?>
+{
+	"title":"<?php print $sph_messages['Previous']?>",
+	"link":"<?php print 'search.php?query='.quote_replace(addmarks($query)).'&start='.$prev.'&search=1&results='.$results_per_page.$type_qry.$adv_qry.'&domain='.$domain?>",
+	"active":"false"
+},		
+	<?php  
+	}
+	foreach ($other_pages as $page_num) {?>
+{
+	"title":"<?php print $page_num?>",
+	"link":"<?php print 'search.php?query='.quote_replace(addmarks($query)).'&start='.$page_num.'&search=1&results='.$results_per_page.$type_qry.$adv_qry.'&domain='.$domain?>",
+		<?php	if ($page_num !=$start){?>
+	"active":"false"
+		<?php } else {?>	
+	"active":"true"
+		<?php  }?>	
+},
+		<?php	}
+	if ($next <= $pages){?>	
+{
+	"title":"<?php print $sph_messages['Next']?>",
+	"link":"<?php print 'search.php?query='.quote_replace(addmarks($query)).'&start='.$next.'&search=1&results='.$results_per_page.$type_qry.$adv_qry.'&domain='.$domain?>",
+	"active":"false"
+}
+	<?php  }?>	
+]
+<?php }?>
